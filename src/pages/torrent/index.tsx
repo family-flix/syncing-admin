@@ -1,4 +1,4 @@
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, createSignal, onMount } from "solid-js";
 
 import { ViewComponent } from "@/store/types";
 import {
@@ -7,7 +7,7 @@ import {
   searchTorrentInMTeam,
   searchTorrentInMTeamProcess,
 } from "@/services/index";
-import { Button, Input, ScrollView } from "@/components/ui";
+import { Button, Input, ListView, ScrollView } from "@/components/ui";
 import { ButtonCore, ButtonInListCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { ListCoreV2 } from "@/domains/list/v2";
 import { RequestCoreV2 } from "@/domains/request/v2";
@@ -48,7 +48,10 @@ export const TorrentSearchPage: ViewComponent = (props) => {
       onLoading: (loading: boolean) => {
         $search.setLoading(loading);
       },
-    })
+    }),
+    {
+      pageSize: 20,
+    }
   );
   const $download = new RequestCoreV2({
     fetch: downloadMTeamMedia,
@@ -70,12 +73,19 @@ export const TorrentSearchPage: ViewComponent = (props) => {
       });
     },
   });
-  const scrollView = new ScrollViewCore();
+  const scrollView = new ScrollViewCore({
+    onReachBottom() {
+      $list.loadMore();
+    },
+  });
 
   const [response, setResponse] = createSignal($list.response);
 
   $list.onStateChange((v) => {
     setResponse(v);
+  });
+  onMount(() => {
+    $list.init();
   });
 
   return (
@@ -88,21 +98,23 @@ export const TorrentSearchPage: ViewComponent = (props) => {
           <Button store={$reset}>重置</Button>
         </div>
       </div>
-      <div class="space-y-4">
-        <For each={response().dataSource}>
-          {(item) => {
-            const { id, title, text, processing, has_downloaded } = item;
-            return (
-              <div class="p-2">
-                <div class="text-xl">{title}</div>
-                <div>{text}</div>
-                <Show when={has_downloaded} fallback={<Button store={$downloadBtn.bind(item)}>下载</Button>}>
-                  <div>已下载</div>
-                </Show>
-              </div>
-            );
-          }}
-        </For>
+      <div class="mt-4 space-y-4">
+        <ListView store={$list}>
+          <For each={response().dataSource}>
+            {(item) => {
+              const { id, title, text, processing, has_downloaded } = item;
+              return (
+                <div class="p-2">
+                  <div class="text-xl">{title}</div>
+                  <div>{text}</div>
+                  <Show when={has_downloaded} fallback={<Button store={$downloadBtn.bind(item)}>下载</Button>}>
+                    <div>已下载</div>
+                  </Show>
+                </div>
+              );
+            }}
+          </For>
+        </ListView>
       </div>
     </ScrollView>
   );

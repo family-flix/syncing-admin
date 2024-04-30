@@ -57,6 +57,7 @@ user.onTip((msg) => {
 });
 user.onLogin((profile) => {
   storage.set("user", profile);
+  history.push("root.home_layout.index");
 });
 user.onLogout(() => {
   storage.clear("user");
