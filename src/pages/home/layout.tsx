@@ -130,7 +130,7 @@ export const HomeLayout: ViewComponent = (props) => {
       text: "任务",
       icon: <Bot class="w-6 h-6" />,
       badge: false,
-      url: "root.home_layout.job_list" as PageKeys,
+      url: "root.home_layout.task_list" as PageKeys,
     },
     {
       text: "设置",

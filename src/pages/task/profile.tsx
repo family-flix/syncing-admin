@@ -9,7 +9,7 @@ import { Button, ScrollView, Skeleton } from "@/components/ui";
 import { Article } from "@/components/Article";
 import { ScrollViewCore, ButtonCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
-import { JobProfile, fetch_job_profile, fetch_output_lines_of_job, pause_job, TaskStatus } from "@/domains/task";
+import { JobProfile, fetchTaskProfile, fetch_output_lines_of_job, pauseTask, TaskStatus } from "@/domains/task";
 import { RequestCore } from "@/domains/request";
 
 export const TaskProfilePage: ViewComponent = (props) => {
@@ -20,7 +20,7 @@ export const TaskProfilePage: ViewComponent = (props) => {
       pauseJob.run(view.query.id);
     },
   });
-  const pauseJob = new RequestCore(pause_job, {
+  const pauseJob = new RequestCore(pauseTask, {
     onLoading(loading) {
       pauseBtn.setLoading(loading);
     },
@@ -41,7 +41,7 @@ export const TaskProfilePage: ViewComponent = (props) => {
     }),
     { pageSize: 100 }
   );
-  const request = new RequestCore(fetch_job_profile, {
+  const request = new RequestCore(fetchTaskProfile, {
     onLoading(loading) {
       refreshBtn.setLoading(loading);
     },

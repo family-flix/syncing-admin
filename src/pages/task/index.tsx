@@ -12,7 +12,7 @@ import { TabHeader } from "@/components/ui/tab-header";
 import { ButtonCore, ButtonInListCore, CheckboxCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { ListCore } from "@/domains/list";
-import { JobItem, fetchJobList, pause_job, TaskStatus } from "@/domains/task";
+import { JobItem, fetchJobList, pauseTask, TaskStatus } from "@/domains/task";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
 import { cn } from "@/utils/index";
 
@@ -20,7 +20,7 @@ export const TaskListPage: ViewComponent = (props) => {
   const { app, history, view } = props;
 
   const jobList = new ListCore(new RequestCore(fetchJobList), {});
-  const pauseJob = new RequestCore(pause_job, {
+  const pauseJob = new RequestCore(pauseTask, {
     onLoading(loading) {
       pauseJobBtn.setLoading(loading);
     },
@@ -40,12 +40,6 @@ export const TaskListPage: ViewComponent = (props) => {
   const profileBtn = new ButtonInListCore<JobItem>({
     onClick(task) {
       history.push("root.home_layout.task_profile", { id: task.id });
-      // homeTaskProfilePage.query = {
-      //   id: task.id,
-      // };
-      // app.showView(homeTaskProfilePage);
-      // homeLayout.showSubView(homeTaskProfilePage);
-      // router.push(`/home/task/${task.id}`);
     },
   });
   const refreshBtn = new ButtonCore({

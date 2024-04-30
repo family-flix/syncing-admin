@@ -3,7 +3,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { BaseDomain, Handler } from "@/domains/base";
 import { Result } from "@/types";
 
-import { fetch_job_profile, fetch_job_status, pause_job } from "./services";
+import { fetchTaskProfile, fetchTaskStatus, pauseTask } from "./services";
 import { TaskStatus } from "./constants";
 
 enum Events {
@@ -33,7 +33,7 @@ export class TaskCore extends BaseDomain<TheTypesOfEvents> {
   /** 创建一个异步任务 */
   static async New(body: { id: string }) {
     const { id } = body;
-    const r = await fetch_job_profile(id);
+    const r = await fetchTaskProfile(id);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -66,7 +66,7 @@ export class TaskCore extends BaseDomain<TheTypesOfEvents> {
   }
 
   async fetchStatus() {
-    const r = await fetch_job_status(this.id);
+    const r = await fetchTaskStatus(this.id);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -84,7 +84,7 @@ export class TaskCore extends BaseDomain<TheTypesOfEvents> {
       //   this.forceFinish();
       //   return;
       // }
-      const r = await fetch_job_status(this.id);
+      const r = await fetchTaskStatus(this.id);
       if (r.error) {
         this.loading = false;
         this.emit(Events.StateChange, { ...this.state });
@@ -138,7 +138,7 @@ export class TaskCore extends BaseDomain<TheTypesOfEvents> {
     if (this.timer === null) {
       return;
     }
-    await pause_job(this.id);
+    await pauseTask(this.id);
     clearInterval(this.timer);
     this.timer = null;
   }
