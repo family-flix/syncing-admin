@@ -125,8 +125,8 @@ export const HomeIndexPage: ViewComponent = (props) => {
 
   return (
     <>
-      <div class="h-screen p-8 whitespace-nowrap">
-        <div class="overflow-x-auto">
+      <div class="relative h-screen p-8 whitespace-nowrap">
+        <div class="absolute left-8 right-8 top-8 bottom-8 overflow-x-auto">
           <Show
             when={filesState().initialized}
             fallback={
