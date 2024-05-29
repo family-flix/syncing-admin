@@ -7,4 +7,7 @@ export type UserSettings = {
     file: string;
     torrent: string;
   };
+  tokens: {
+    mteam: string;
+  };
 };

@@ -2,19 +2,43 @@ import { createSignal, onMount } from "solid-js";
 import { Show, For } from "solid-js";
 import { ChevronRight, Loader } from "lucide-solid";
 
-import { ViewComponent } from "@/store/types";
+import { ViewComponent, ViewComponentProps } from "@/store/types";
 import { Button, Input, ScrollView, Skeleton, Textarea } from "@/components/ui/index";
 import { Dialog, ListView } from "@/components/ui/index";
 import { List } from "@/components/List";
 import { ButtonCore, DialogCore, InputCore, ScrollViewCore } from "@/domains/ui/index";
 import { DriveFilesCore } from "@/domains/drive";
+import { RefCore } from "@/domains/cur";
+import { RequestCoreV2 } from "@/domains/request/v2";
 import { BizError } from "@/domains/error";
 import { FileType } from "@/constants/index";
-import { RefCore } from "@/domains/cur";
+import { fetchUserSettings } from "@/domains/user/services";
 
-export const UserSettingsManagePage: ViewComponent = (props) => {
+function UserSettingsManagePageLogic(props: ViewComponentProps & { $ui: ReturnType<typeof UserSettingsManagePageUI> }) {
+  const { app, client, $ui } = props;
+
+  const $profile = new RequestCoreV2({ fetch: fetchUserSettings, client });
+
+  return {
+    async ready() {
+      const r = await $profile.run();
+      if (r.error) {
+        app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      const { site, paths, tokens } = r.data;
+      $ui.$hostnameInput.setValue(site.hostname ?? "");
+      $ui.$tokenInput.setValue(site.token ?? "");
+      $ui.$torrentDirInput.setValue(paths.torrent ?? "");
+      $ui.$fileDirInput.setValue(paths.file ?? "");
+      $ui.$mteamTokenInput.setValue(tokens.mteam ?? "");
+    },
+  };
+}
+function UserSettingsManagePageUI(props: ViewComponentProps) {
   const { app, client } = props;
-
   const $hostnameInput = new InputCore({
     defaultValue: "",
   });
@@ -27,14 +51,18 @@ export const UserSettingsManagePage: ViewComponent = (props) => {
   const $torrentDirInput = new InputCore({
     defaultValue: "",
   });
+  const $mteamTokenInput = new InputCore({
+    defaultValue: "",
+  });
   const $cur = new RefCore<number>({});
   const $submit = new ButtonCore({
     async onClick() {
-      const { hostname, token, file, torrent } = {
+      const { hostname, token, file, torrent, mteam_token } = {
         hostname: $hostnameInput.value,
         token: $tokenInput.value,
         file: $fileDirInput.value,
         torrent: $torrentDirInput.value,
+        mteam_token: $mteamTokenInput.value,
       };
       const tip = (() => {
         if (!hostname) {
@@ -57,6 +85,7 @@ export const UserSettingsManagePage: ViewComponent = (props) => {
         });
         return;
       }
+      $submit.setLoading(true);
       const r = await app.$user.updateSettings({
         site: {
           hostname,
@@ -66,7 +95,11 @@ export const UserSettingsManagePage: ViewComponent = (props) => {
           file,
           torrent,
         },
+        tokens: {
+          mteam: mteam_token,
+        },
       });
+      $submit.setLoading(false);
       if (r.error) {
         app.tip({
           text: [r.error.message],
@@ -79,6 +112,7 @@ export const UserSettingsManagePage: ViewComponent = (props) => {
     },
   });
   const scrollView = new ScrollViewCore({});
+  const driveFileManage = new DriveFilesCore({ id: "", client });
   const foldersModal = new DialogCore({
     onOk() {
       const curFolder = driveFileManage.state.curFolder;
@@ -98,38 +132,54 @@ export const UserSettingsManagePage: ViewComponent = (props) => {
       foldersModal.hide();
     },
   });
-  const driveFileManage = new DriveFilesCore({ id: "", client });
 
-  const [folderColumns, setFolderColumns] = createSignal(driveFileManage.folderColumns);
+  return {
+    scrollView,
+    driveFileManage,
+    $hostnameInput,
+    $tokenInput,
+    $fileDirInput,
+    $torrentDirInput,
+    $mteamTokenInput,
+    $cur,
+    $submit,
+    foldersModal,
+  };
+}
+
+export const UserSettingsManagePage: ViewComponent = (props) => {
+  const { app, client } = props;
+
+  const $ui = UserSettingsManagePageUI(props);
+  const $page = UserSettingsManagePageLogic({ ...props, $ui });
+
+  const [folderColumns, setFolderColumns] = createSignal($ui.driveFileManage.folderColumns);
   const [hasError, setHasError] = createSignal<BizError | null>(null);
-  const [filesState, setFilesState] = createSignal(driveFileManage.state);
+  const [filesState, setFilesState] = createSignal($ui.driveFileManage.state);
 
-  driveFileManage.onFolderColumnChange((nextColumns) => {
-    console.log("[COMPONENT]onFolderColumnChange", nextColumns);
-    setFolderColumns(nextColumns);
-  });
-  driveFileManage.onError((e) => {
-    setHasError(e);
-  });
-  driveFileManage.onStateChange((nextState) => {
-    setFilesState(nextState);
+  $ui.driveFileManage.onFolderColumnChange((v) => setFolderColumns(v));
+  $ui.driveFileManage.onError((e) => setHasError(e));
+  $ui.driveFileManage.onStateChange((v) => setFilesState(v));
+
+  onMount(() => {
+    $page.ready();
   });
 
   return (
     <>
-      <ScrollView store={scrollView} class="h-screen p-8">
-        <h1 class="text-2xl">任务列表</h1>
+      <ScrollView store={$ui.scrollView} class="h-screen p-8">
+        <h1 class="text-2xl">用户设置</h1>
         <div class="mt-8 space-y-4">
           <div>
             <div class="text-xl">Media Site</div>
             <div class="mt-2 space-y-2">
               <div class="">
                 <div>域名</div>
-                <Input store={$hostnameInput} />
+                <Input store={$ui.$hostnameInput} />
               </div>
               <div class="">
                 <div>token</div>
-                <Textarea store={$tokenInput} />
+                <Textarea store={$ui.$tokenInput} />
               </div>
             </div>
           </div>
@@ -138,17 +188,17 @@ export const UserSettingsManagePage: ViewComponent = (props) => {
             <div class="mt-2 space-y-2">
               <div class="">
                 <div>视频文件</div>
-                <Input store={$fileDirInput} />
+                <Input store={$ui.$fileDirInput} />
                 <div
                   onClick={() => {
-                    if (!driveFileManage.initialized) {
-                      driveFileManage.appendColumn({
+                    if (!$ui.driveFileManage.initialized) {
+                      $ui.driveFileManage.appendColumn({
                         file_id: "root",
                         name: "文件",
                       });
                     }
-                    $cur.select(1);
-                    foldersModal.show();
+                    $ui.$cur.select(1);
+                    $ui.foldersModal.show();
                   }}
                 >
                   选择文件夹
@@ -156,17 +206,17 @@ export const UserSettingsManagePage: ViewComponent = (props) => {
               </div>
               <div class="">
                 <div>种子</div>
-                <Input store={$torrentDirInput} />
+                <Input store={$ui.$torrentDirInput} />
                 <div
                   onClick={() => {
-                    if (!driveFileManage.initialized) {
-                      driveFileManage.appendColumn({
+                    if (!$ui.driveFileManage.initialized) {
+                      $ui.driveFileManage.appendColumn({
                         file_id: "root",
                         name: "文件",
                       });
                     }
-                    $cur.select(2);
-                    foldersModal.show();
+                    $ui.$cur.select(2);
+                    $ui.foldersModal.show();
                   }}
                 >
                   选择文件夹
@@ -174,12 +224,22 @@ export const UserSettingsManagePage: ViewComponent = (props) => {
               </div>
             </div>
           </div>
+          <div>
+            <div class="my-8 h-[1px] bg-black" style="opacity: 0.4;" />
+            <div class="text-xl">PT 站授权凭证</div>
+            <div class="mt-2 space-y-2">
+              <div class="">
+                <div>MTeam</div>
+                <Input store={$ui.$mteamTokenInput} />
+              </div>
+            </div>
+          </div>
         </div>
         <div class="mt-8">
-          <Button store={$submit}>保存</Button>
+          <Button store={$ui.$submit}>保存</Button>
         </div>
       </ScrollView>
-      <Dialog title="选择文件夹" store={foldersModal}>
+      <Dialog title="选择文件夹" store={$ui.foldersModal}>
         <div class="w-[520px] overflow-x-auto h-[320px]">
           <Show
             when={filesState().initialized}
@@ -226,7 +286,7 @@ export const UserSettingsManagePage: ViewComponent = (props) => {
                                       "bg-slate-200": selected,
                                     }}
                                     onClick={() => {
-                                      driveFileManage.select(folder, [columnIndex(), index]);
+                                      $ui.driveFileManage.select(folder, [columnIndex(), index]);
                                     }}
                                   >
                                     <div class="flex-1 overflow-hidden whitespace-nowrap text-ellipsis">{name}</div>

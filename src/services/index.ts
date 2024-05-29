@@ -1,5 +1,6 @@
 import { FetchParams } from "@/domains/list/typing";
 import { TmpRequestResp, request } from "@/domains/request/utils";
+import { UserSettings } from "@/domains/user/types";
 import { ListResponse, RequestedResource, Result } from "@/types/index";
 import { bytes_to_size } from "@/utils/index";
 

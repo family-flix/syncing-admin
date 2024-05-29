@@ -68,15 +68,16 @@ export function validate() {
  * 获取用户配置
  */
 export function fetchUserSettings() {
-  return request.get<UserSettings>("/api/user/fetch_settings");
+  return request.post<UserSettings>("/api/user/fetch_settings");
 }
 /**
  * 更新用户配置
  */
 export function updateUserSettings(values: Partial<UserSettings>) {
-  const { site, paths } = values;
-  return request.post(`/api/user/update_settings`, {
+  const { site, paths, tokens } = values;
+  return request.post("/api/user/update_settings", {
     site,
     paths,
+    tokens,
   });
 }
