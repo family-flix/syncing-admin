@@ -1,6 +1,4 @@
-import { Handler } from "mitt";
-
-import { BaseDomain } from "@/domains/base";
+import { Handler, BaseDomain } from "@/domains/base";
 
 enum Events {
   StateChange,
@@ -14,9 +12,7 @@ type TheTypesOfEvents = {
   [Events.Loaded]: void;
   [Events.Error]: void;
 };
-const prefix = window.location.origin;
-// const prefix = "https://img.funzm.com";
-// const DEFAULT_IMAGE1 = prefix + "/placeholder.png";
+
 export enum ImageStep {
   Pending,
   Loading,
@@ -42,6 +38,7 @@ type ImageState = Omit<ImageProps, "scale"> & {
   step: ImageStep;
   scale: number | null;
 };
+let prefix = "";
 
 export class ImageCore extends BaseDomain<TheTypesOfEvents> {
   static url(url?: string | null) {
@@ -53,8 +50,11 @@ export class ImageCore extends BaseDomain<TheTypesOfEvents> {
     }
     return prefix + url;
   }
+  static setPrefix(v: string) {
+    prefix = v;
+  }
 
-  unique_id: unknown;
+  unique_uid: unknown;
   src: string;
   width: number;
   height: number;
@@ -73,7 +73,6 @@ export class ImageCore extends BaseDomain<TheTypesOfEvents> {
       scale: this.scale,
     };
   }
-
   constructor(props: Partial<{}> & ImageProps) {
     super();
 
@@ -87,20 +86,13 @@ export class ImageCore extends BaseDomain<TheTypesOfEvents> {
       this.scale = scale;
     }
     if (unique_id) {
-      this.unique_id = unique_id;
+      this.unique_uid = unique_id;
     }
   }
 
-  setURL(src: string | null) {
-    if (src === null) {
-      return;
-    }
+  updateSrc(src: string) {
     this.realSrc = src;
-    if (this.step !== ImageStep.Loaded) {
-      return;
-    }
-    this.src = ImageCore.url(this.realSrc);
-    this.emit(Events.StateChange, { ...this.state });
+    this.handleShow();
   }
   /** 图片进入可视区域 */
   handleShow() {
@@ -159,9 +151,9 @@ export class ImageInListCore extends BaseDomain<TheTypesOfEvents> {
   }
 
   /** 当按钮处于列表中时，使用该方法保存所在列表记录 */
-  bind(unique_id?: string) {
+  bind(unique_id: string) {
     const existing = this.btns.find((btn) => {
-      return btn.unique_id === unique_id;
+      return btn.unique_uid === unique_id;
     });
     if (existing) {
       return existing;
@@ -174,7 +166,7 @@ export class ImageInListCore extends BaseDomain<TheTypesOfEvents> {
     return btn;
   }
   select(unique_id: unknown) {
-    const matched = this.btns.find((btn) => btn.unique_id === unique_id);
+    const matched = this.btns.find((btn) => btn.unique_uid === unique_id);
     if (!matched) {
       return;
     }

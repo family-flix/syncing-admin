@@ -5,23 +5,19 @@ import { For, createSignal, JSX } from "solid-js";
 
 import * as ToastPrimitive from "@/packages/ui/toast";
 import { ToastCore } from "@/domains/ui/toast";
-import { cn } from "@/utils";
+import { cn } from "@/utils/index";
 
 export const Toast = (props: { store: ToastCore }) => {
   const { store } = props;
 
   const [state, setState] = createSignal(store.state);
-  store.onStateChange((nextState) => {
-    setState(nextState);
-  });
-
-  const texts = () => state().texts;
+  store.onStateChange((v) => setState(v));
 
   return (
     <Root store={store}>
       <Portal store={store}>
         <Content store={store}>
-          <For each={texts()}>
+          <For each={state().texts}>
             {(text) => {
               return <div class="text-center">{text}</div>;
             }}

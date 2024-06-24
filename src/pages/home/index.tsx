@@ -6,6 +6,7 @@ import { Send, FileSearch, RefreshCcw, AlertTriangle, Loader, Bird, ChevronRight
 
 import { ViewComponent } from "@/store/types";
 
+import { createJob } from "@/store/job";
 import {
   Button,
   Dialog,
@@ -18,30 +19,19 @@ import {
   Skeleton,
   DropdownMenu,
 } from "@/components/ui";
-import { ButtonCore, DialogCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui/index";
-import { ImageInListCore } from "@/domains/ui/image";
-import { RequestCore } from "@/domains/request";
-import { DriveTypes, FileType, ReportTypes } from "@/constants";
-import { AliyunDriveFile, DriveFilesCore } from "@/domains/drive";
+import { noticeNasUploadFile } from "@/services";
+import { DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui/index";
+import { RequestCore } from "@/domains/request/index";
+import { FileType } from "@/constants";
+import { AliyunDriveFile, DriveFilesCore } from "@/biz/drive";
 import { BizError } from "@/domains/error";
 import { List } from "@/components/List";
-import { RequestCoreV2 } from "@/domains/request/v2";
-import { request } from "@/domains/request/utils";
-import { createJob } from "@/store/job";
 import { RefCore } from "@/domains/cur";
-
-function noticeNasUploadFile(values: { file_id: string }) {
-  const { file_id } = values;
-  return request.post<{ task_id: string }>("/api/download/callback", {
-    f: file_id,
-  });
-}
 
 export const HomeIndexPage: ViewComponent = (props) => {
   const { app, history, view, client } = props;
 
-  const syncRequest = new RequestCoreV2({
-    fetch: noticeNasUploadFile,
+  const syncRequest = new RequestCore(noticeNasUploadFile, {
     client,
   });
   const curFileWithPosition = new RefCore<[AliyunDriveFile, [number, number]]>();
@@ -107,21 +97,19 @@ export const HomeIndexPage: ViewComponent = (props) => {
     setFilesState(nextState);
   });
 
-  onMount(() => {
-    (async () => {
-      const r = await app.$user.fetchProfile();
-      if (r.error) {
-        app.tip({
-          text: [r.error.message],
-        });
-        return;
-      }
-      driveFileManage.appendColumn({
-        file_id: r.data.settings.paths.file,
-        name: "文件",
+  (async () => {
+    const r = await app.$user.fetchProfile();
+    if (r.error) {
+      app.tip({
+        text: [r.error.message],
       });
-    })();
-  });
+      return;
+    }
+    driveFileManage.appendColumn({
+      file_id: r.data.settings.paths.file,
+      name: "文件",
+    });
+  })();
 
   return (
     <>

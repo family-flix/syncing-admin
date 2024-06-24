@@ -9,8 +9,8 @@ import {
 } from "@/services/index";
 import { Button, Input, ListView, ScrollView } from "@/components/ui";
 import { ButtonCore, ButtonInListCore, InputCore, ScrollViewCore } from "@/domains/ui";
-import { ListCoreV2 } from "@/domains/list/v2";
-import { RequestCoreV2 } from "@/domains/request/v2";
+import { ListCore } from "@/domains/list/index";
+import { RequestCore } from "@/domains/request/index";
 
 export const TorrentSearchPage: ViewComponent = (props) => {
   const { app, client } = props;
@@ -40,10 +40,9 @@ export const TorrentSearchPage: ViewComponent = (props) => {
       $list.reset();
     },
   });
-  const $list = new ListCoreV2(
-    new RequestCoreV2({
+  const $list = new ListCore(
+    new RequestCore(searchTorrentInMTeam, {
       client,
-      fetch: searchTorrentInMTeam,
       process: searchTorrentInMTeamProcess,
       onLoading: (loading: boolean) => {
         $search.setLoading(loading);
@@ -53,8 +52,7 @@ export const TorrentSearchPage: ViewComponent = (props) => {
       pageSize: 20,
     }
   );
-  const $download = new RequestCoreV2({
-    fetch: downloadMTeamMedia,
+  const $download = new RequestCore(downloadMTeamMedia, {
     client,
   });
   const $downloadBtn = new ButtonInListCore<MTeamMediaItem>({

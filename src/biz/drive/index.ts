@@ -4,7 +4,7 @@
  */
 import { BaseDomain, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { FileType } from "@/constants/index";
 
 import {

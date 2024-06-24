@@ -5,22 +5,15 @@ import { DriveFile, fetchDriveFiles, fetchDriveFilesProcess } from "@/services/d
 import { BaseDomain, Handler } from "@/domains/base";
 import { ScrollViewCore } from "@/domains/ui";
 import { BizError } from "@/domains/error";
-import { ListCoreV2 } from "@/domains/list/v2";
-import { RequestCoreV2 } from "@/domains/request/v2";
+import { ListCore } from "@/domains/list/index";
+import { RequestCore } from "@/domains/request/index";
 import { HttpClientCore } from "@/domains/http_client";
 import { FileType } from "@/constants/index";
 
 import { AliyunFilePath, AliyunDriveFile } from "./types";
 
 type FileColumn = {
-  list: ListCoreV2<
-    RequestCoreV2<{
-      fetch: typeof fetchDriveFiles;
-      process: typeof fetchDriveFilesProcess;
-      client: HttpClientCore;
-    }>,
-    DriveFile
-  >;
+  list: ListCore<RequestCore<typeof fetchDriveFiles, { process: typeof fetchDriveFilesProcess }>, DriveFile>;
   view: ScrollViewCore;
 };
 enum Events {
@@ -94,9 +87,8 @@ export class DriveFilesCore extends BaseDomain<TheTypesOfEvents> {
     console.log("[DOMAIN]drive/files - createColumn", this.id);
     const drive_id = this.id;
     const { file_id } = folder;
-    const list = new ListCoreV2(
-      new RequestCoreV2({
-        fetch: fetchDriveFiles,
+    const list = new ListCore(
+      new RequestCore(fetchDriveFiles, {
         process: fetchDriveFilesProcess,
         client: this.client,
       }),
@@ -150,10 +142,12 @@ export class DriveFilesCore extends BaseDomain<TheTypesOfEvents> {
     };
   }
   appendColumn(folder: { file_id: string; name: string }) {
+    // @ts-ignore
     this.folderColumns.push(this.createColumn(folder));
     this.emit(Events.FoldersChange, [...this.folderColumns]);
   }
   replaceColumn(folder: { file_id: string; name: string }, index: number) {
+    // @ts-ignore
     this.folderColumns = [...this.folderColumns.slice(0, index + 1), this.createColumn(folder)];
     this.emit(Events.FoldersChange, [...this.folderColumns]);
   }

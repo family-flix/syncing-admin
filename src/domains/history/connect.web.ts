@@ -2,8 +2,46 @@ import { HistoryCore } from "@/domains/history";
 
 const ownerDocument = globalThis.document;
 
-export function connect(history: HistoryCore<any, any>) {
-  const { $router: router } = history;
+export function connect(history: HistoryCore<string, any>) {
+  history.reload = () => {
+    window.location.reload();
+  };
+  history.back = () => {
+    window.history.back();
+  };
+  history.$router.onPopState((r) => {
+    const { type, pathname, href } = r;
+    console.log("[ROOT]index - app.onPopState", type, pathname, href);
+    if (type === "back") {
+      history.realBack();
+      return;
+    }
+    if (type === "forward") {
+      history.forward();
+      return;
+    }
+  });
+  history.$router.onPushState(({ from, to, path, pathname }) => {
+    console.log("[ROOT]index - before history.pushState", from, to, path, pathname);
+    window.history.pushState(
+      {
+        from,
+        to,
+      },
+      "",
+      path
+    );
+  });
+  history.$router.onReplaceState(({ from, path, pathname }) => {
+    console.log("[ROOT]index - before history.replaceState", from, path, pathname);
+    window.history.replaceState(
+      {
+        from,
+      },
+      "",
+      path
+    );
+  });
   ownerDocument.addEventListener("click", (event) => {
     // console.log('[DOMAIN]app/connect.web', event.target);
     let target = event.target;
@@ -27,7 +65,7 @@ export function connect(history: HistoryCore<any, any>) {
     }
     const t = target as HTMLElement;
     const href = t.getAttribute("href");
-    console.log("[CORE]app/connect - link a", href);
+    console.log("[DOMAIN]history/connect.web - link a", href);
     if (!href) {
       return;
     }
@@ -42,5 +80,11 @@ export function connect(history: HistoryCore<any, any>) {
     }
     event.preventDefault();
     history.handleClickLink({ href, target: null });
+  });
+  window.addEventListener("popstate", (event) => {
+    console.log("[DOMAIN]history/connect - window.addEventListener('popstate'", event.state?.from, event.state?.to);
+    const { type } = event;
+    const { pathname, href } = window.location;
+    history.$router.handlePopState({ type, href, pathname: event.state?.to });
   });
 }

@@ -5,7 +5,8 @@ import dayjs from "dayjs";
 
 import { client } from "@/store/request";
 import { FetchParams } from "@/domains/list/typing";
-import { JSONObject, ListResponse, ListResponseWithCursor, RequestedResource, Result } from "@/types";
+import { JSONObject, ListResponse, ListResponseWithCursor, RequestedResource } from "@/types";
+import { Result } from "@/domains/result/index";
 import { DriveTypes, FileType, MediaTypes } from "@/constants";
 import { bytes_to_size } from "@/utils";
 

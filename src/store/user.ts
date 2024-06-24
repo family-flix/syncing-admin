@@ -1,4 +1,4 @@
-import { UserCore } from "@/domains/user";
+import { UserCore } from "@/biz/user";
 
 import { storage } from "./storage";
 

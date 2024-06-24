@@ -3,8 +3,8 @@
  */
 import mitt, { Handler } from "mitt";
 
-import { TaskCore } from "@/domains/task";
-import { TaskStatus } from "@/domains/task/constants";
+import { TaskCore } from "@/biz/task";
+import { TaskStatus } from "@/biz/task/constants";
 
 import { storage } from "./storage";
 

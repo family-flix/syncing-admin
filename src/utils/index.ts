@@ -3,19 +3,28 @@ import "dayjs/locale/zh-cn";
 import relative_time from "dayjs/plugin/relativeTime";
 import { twMerge } from "tailwind-merge";
 
+import { JSONObject } from "@/types/index";
+
 import { cn as nzhcn } from "./nzh";
-import { JSONObject, Result } from "@/types";
 
 dayjs.extend(relative_time);
 dayjs.locale("zh-cn");
 
 export function cn(...inputs: any[]) {
+  // return twMerge(clsx(inputs));
   return twMerge(inputs);
 }
 
-export function padding_zero(str: number | string) {
-  if (String(str).length === 1) {
-    return `0${str}`;
+export function padding_zero(str: number | string, options: { count: number; pos: number } = { count: 2, pos: 1 }) {
+  const { count, pos } = options;
+  if (String(str).length < count) {
+    const num = count - String(str).length;
+    if (pos === 1) {
+      return `${"0".repeat(num)}${str}`;
+    }
+    if (pos === 2) {
+      return `${str}${"0".repeat(num)}`;
+    }
   }
   return String(str);
 }
@@ -23,7 +32,13 @@ export function remove_str(filename: string, index: number = 0, length: number) 
   return filename.slice(0, index) + filename.slice(index + length);
 }
 
-export function episode_to_chinese_num(str: string) {
+export function episode_to_chinese_num(str: string | number) {
+  if (typeof str === "number") {
+    return `第${str}集`;
+  }
+  if (str.match(/^[0-9]/)) {
+    return str;
+  }
   const regex = /(\d+)/g;
   let s = str.replace(/[eE]/g, "");
   const matches = s.match(regex);
@@ -38,18 +53,17 @@ export function episode_to_chinese_num(str: string) {
   return s;
 }
 export function season_to_chinese_num(str: string) {
-  const regex = /(\d+)/g;
-  let s = str.replace(/[sS]/g, "");
-  const matches = s.match(regex);
-  if (!matches) {
+  const num = str.match(/[0-9]{1,}/);
+  if (!num) {
     return str;
   }
-  for (let i = 0; i < matches.length; i++) {
-    const num = parseInt(matches[i], 10);
-    const chinese_num = num_to_chinese(num);
-    s = s.replace(matches[i], `第${chinese_num}季`);
+  const value = parseInt(num[0]);
+  const chinese_num = num_to_chinese(value);
+  const correct = chinese_num.match(/^一(十.{0,1})/);
+  if (correct) {
+    return `第${correct[1]}季`;
   }
-  return s;
+  return `第${chinese_num}季`;
 }
 /**
  * 阿拉伯数字转中文数字
@@ -63,40 +77,48 @@ export function chinese_num_to_num(str: string) {
   return nzhcn.decodeS(str);
 }
 
-export function update<T>(arr: T[], index: number, nextItem: T) {
+/**
+ * 使用指定元素，替换数组中指定下标的元素
+ */
+export function replaceItemWithIndex<T>(arr: T[], index: number, nextItem: T) {
   if (index === -1) {
     return [...arr];
   }
   return [...arr.slice(0, index), nextItem, ...arr.slice(index + 1)];
 }
 
-/**
- * 将对象转成 search 字符串，前面不带 ?
- * @param query
- * @returns
- */
-export function query_stringify(query?: null | JSONObject) {
-  if (query === null) {
-    return "";
-  }
-  if (query === undefined) {
-    return "";
-  }
+export function query_stringify(query: JSONObject) {
   return Object.keys(query)
     .filter((key) => {
       return query[key] !== undefined;
     })
     .map((key) => {
       // @ts-ignore
-      return `${key}=${encodeURIComponent(query[key])}`;
+      return `${key}=${encodeURIComponent(query[key]!)}`;
     })
     .join("&");
 }
 
-export function bytes_to_size(bytes: number) {
-  if (!bytes) {
-    return "0KB";
+const defaultRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+/**
+ * 返回一个指定长度的随机字符串
+ * @param length
+ * @returns
+ */
+export function random_string(length: number) {
+  return random_string_with_alphabet(length, defaultRandomAlphabet);
+}
+function random_string_with_alphabet(length: number, alphabet: string) {
+  let b = new Array(length);
+  let max = alphabet.length;
+  for (let i = 0; i < b.length; i++) {
+    let n = Math.floor(Math.random() * max);
+    b[i] = alphabet[n];
   }
+  return b.join("");
+}
+
+export function bytes_to_size(bytes: number) {
   if (bytes === 0) {
     return "0KB";
   }
@@ -118,7 +140,11 @@ export function bytes_to_size(bytes: number) {
   }
   return `${remove_zero(size.toFixed(2))}${unit}`;
 }
-
+export function seconds_to_minute(value: number) {
+  const minutes = Math.floor(value / 60);
+  const seconds = Math.floor(value - minutes * 60);
+  return [minutes, "分", seconds, "秒"].join("");
+}
 /**
  * 秒数转时分秒
  * @param value
@@ -133,7 +159,21 @@ export function seconds_to_hour(value: number) {
   }
   return padding_zero(minutes) + ":" + padding_zero(seconds);
 }
-
+export function minute_to_hour(value: number) {
+  const hours = Math.floor(value / 60);
+  const minutes = Math.floor(value - hours * 60);
+  if (hours > 0) {
+    return [hours, minutes];
+  }
+  return [null, minutes];
+}
+export function minute_to_hour2(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  const formattedHours = String(hours).padStart(2, "0");
+  const formattedMinutes = String(remainingMinutes).padStart(2, "0");
+  return `${formattedHours}:${formattedMinutes}`;
+}
 export function relative_time_from_now(time: string) {
   const date = dayjs(time);
   const now = dayjs();
@@ -170,19 +210,26 @@ export function sleep(delay: number = 1000) {
     }, delay);
   });
 }
-
-export function buildRegexp(value: string) {
-  try {
-    const regexp = new RegExp(value);
-    return Result.Ok(regexp);
-  } catch (err) {
-    const e = err as Error;
-    return Result.Err(e.message);
+export function deepMerge<T extends object, U extends object>(a: T, b: U): T & U {
+  // 检查是否为对象
+  function isObject(obj: any): obj is object {
+    return obj && typeof obj === "object" && !Array.isArray(obj);
   }
-}
+  // 合并两个对象
+  for (const key in b) {
+    if (isObject(b[key])) {
+      // @ts-ignore
+      if (!a[key]) {
+        (a as any)[key] = {};
+      }
+      // @ts-ignore
+      (a as any)[key] = deepMerge((a as any)[key], b[key]);
+    } else {
+      if ((a as any)[key] === undefined) {
+        (a as any)[key] = b[key];
+      }
+    }
+  }
 
-export const video_file_type_regexp =
-  /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$|\.[mM][oO][vV]$/;
-export function is_video_file(filename: string) {
-  return video_file_type_regexp.test(filename);
+  return a as T & U;
 }

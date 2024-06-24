@@ -9,7 +9,7 @@ import { Button, ScrollView, Skeleton } from "@/components/ui";
 import { Article } from "@/components/Article";
 import { ScrollViewCore, ButtonCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
-import { JobProfile, fetchTaskProfile, fetch_output_lines_of_job, pauseTask, TaskStatus } from "@/domains/task";
+import { JobProfile, fetchTaskProfile, fetch_output_lines_of_job, pauseTask, TaskStatus } from "@/biz/task";
 import { RequestCore } from "@/domains/request";
 
 export const TaskProfilePage: ViewComponent = (props) => {

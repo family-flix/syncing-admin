@@ -12,7 +12,7 @@ import { TabHeader } from "@/components/ui/tab-header";
 import { ButtonCore, ButtonInListCore, CheckboxCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { ListCore } from "@/domains/list";
-import { JobItem, fetchJobList, pauseTask, TaskStatus } from "@/domains/task";
+import { JobItem, fetchJobList, pauseTask, TaskStatus } from "@/biz/task";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
 import { cn } from "@/utils/index";
 

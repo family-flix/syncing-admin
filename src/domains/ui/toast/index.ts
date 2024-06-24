@@ -68,10 +68,7 @@ export class ToastCore extends BaseDomain<TheTypesOfEvents> {
   /** 显示弹窗 */
   async show(params: { icon?: unknown; texts: string[] }) {
     const { icon, texts } = params;
-    this.emit(Events.StateChange, {
-      icon,
-      texts,
-    });
+    console.log("[DOMAIN]ui/toast - show", params);
     if (this.timer !== null) {
       this.clearTimer();
       this.timer = setTimeout(() => {
@@ -81,6 +78,10 @@ export class ToastCore extends BaseDomain<TheTypesOfEvents> {
       return;
     }
     this.present.show();
+    this.emit(Events.StateChange, {
+      icon,
+      texts,
+    });
     this.timer = setTimeout(() => {
       this.hide();
       this.clearTimer();

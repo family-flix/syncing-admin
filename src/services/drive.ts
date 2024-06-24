@@ -1,7 +1,9 @@
+import { media_request } from "@/biz/requests";
 import { FetchParams } from "@/domains/list/typing";
-import { TmpRequestResp, request } from "@/domains/request/utils";
+import { TmpRequestResp } from "@/domains/request/utils";
+import { Result, UnpackedResult } from "@/domains/result/index";
 import { FileType } from "@/constants/index";
-import { Result, Unpacked, UnpackedResult } from "@/types/index";
+import { Unpacked } from "@/types/index";
 
 /**
  * 获取指定云盘内文件夹列表
@@ -24,7 +26,7 @@ export function fetchDriveFiles(
   } & FetchParams
 ) {
   const { drive_id, file_id, name, next_marker, page, pageSize = 24 } = body;
-  return request.post<{
+  return media_request.post<{
     items: {
       file_id: string;
       name: string;

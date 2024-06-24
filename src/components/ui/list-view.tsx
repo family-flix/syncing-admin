@@ -5,13 +5,12 @@ import { Show, createSignal } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
 import { AlertCircle, ArrowDown, Bird, Loader } from "lucide-solid";
 
-import { ListCore } from "@/domains/list";
-import { ListCoreV2 } from "@/domains/list/v2";
+import { ListCore } from "@/domains/list/index";
 import { cn } from "@/utils/index";
 
 export function ListView(
   props: {
-    store: ListCore<any, any> | ListCoreV2<any, any>;
+    store: ListCore<any, any>;
     skeleton?: JSX.Element;
   } & JSX.HTMLAttributes<HTMLDivElement>
 ) {

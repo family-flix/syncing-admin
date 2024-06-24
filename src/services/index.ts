@@ -1,12 +1,13 @@
+import { media_request } from "@/biz/requests";
 import { FetchParams } from "@/domains/list/typing";
-import { TmpRequestResp, request } from "@/domains/request/utils";
-import { UserSettings } from "@/domains/user/types";
-import { ListResponse, RequestedResource, Result } from "@/types/index";
+import { TmpRequestResp } from "@/domains/request/utils";
+import { ListResponse, RequestedResource } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { bytes_to_size } from "@/utils/index";
 
 export function searchTorrentInMTeam(values: FetchParams & { keyword: string }) {
   const { page, pageSize, keyword } = values;
-  return request.post<
+  return media_request.post<
     ListResponse<{
       id: string;
       createdDate: string;
@@ -109,8 +110,18 @@ export type MTeamMediaItem = RequestedResource<typeof searchTorrentInMTeamProces
 
 export function downloadMTeamMedia(values: { id: string }) {
   const { id } = values;
-  return request.post<void>("/api/torrent/download", {
+  return media_request.post<void>("/api/torrent/download", {
     id,
     site: "mteam",
   });
 }
+
+
+export function noticeNasUploadFile(values: { file_id: string }) {
+  const { file_id } = values;
+  return media_request.post<{ task_id: string }>("/api/download/callback", {
+    f: file_id,
+  });
+}
+
+

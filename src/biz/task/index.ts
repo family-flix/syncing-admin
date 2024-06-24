@@ -1,7 +1,7 @@
 import dayjs, { Dayjs } from "dayjs";
 
 import { BaseDomain, Handler } from "@/domains/base";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 import { fetchTaskProfile, fetchTaskStatus, pauseTask } from "./services";
 import { TaskStatus } from "./constants";

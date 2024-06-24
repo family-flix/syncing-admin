@@ -1,4 +1,4 @@
-import { request } from "@/domains/request/utils";
+import { media_request } from "@/biz/requests/index";
 
 import { UserSettings } from "./types";
 
@@ -8,7 +8,7 @@ import { UserSettings } from "./types";
  * @returns
  */
 export function login(body: { email: string; password: string }) {
-  return request.post<{
+  return media_request.post<{
     id: string;
     username: string;
     // name: string;
@@ -26,7 +26,7 @@ export function login(body: { email: string; password: string }) {
  * @returns
  */
 export function register(body: { email: string; password: string }) {
-  return request.post<{
+  return media_request.post<{
     id: string;
     username: string;
     // name: string;
@@ -39,11 +39,11 @@ export function register(body: { email: string; password: string }) {
 }
 
 export function logout(body: { email: string; password: string }) {
-  return request.post("/api/user/logout", body);
+  return media_request.post("/api/user/logout", body);
 }
 
 export function get_token() {
-  return request.post("/api/token", {});
+  return media_request.post("/api/token", {});
 }
 
 /**
@@ -51,7 +51,7 @@ export function get_token() {
  * @returns
  */
 export function fetchUserProfile() {
-  return request.post<{
+  return media_request.post<{
     nickname: string;
     settings: UserSettings;
   }>("/api/user/profile");
@@ -61,21 +61,21 @@ export function fetchUserProfile() {
  * 成员通过授权链接访问首页时，验证该链接是否有效
  */
 export function validate() {
-  return request.post<{ ok: number }>("/api/admin/user/validate");
+  return media_request.post<{ ok: number }>("/api/admin/user/validate");
 }
 
 /**
  * 获取用户配置
  */
 export function fetchUserSettings() {
-  return request.post<UserSettings>("/api/user/fetch_settings");
+  return media_request.post<UserSettings>("/api/user/fetch_settings");
 }
 /**
  * 更新用户配置
  */
 export function updateUserSettings(values: Partial<UserSettings>) {
   const { site, paths, tokens } = values;
-  return request.post("/api/user/update_settings", {
+  return media_request.post("/api/user/update_settings", {
     site,
     paths,
     tokens,

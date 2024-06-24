@@ -1,5 +1,3 @@
-import { JSXElement } from "solid-js";
-
 import { ViewComponent } from "@/store/types";
 import { HomeLayout } from "@/pages/home/layout";
 import { LoginPage } from "@/pages/login";

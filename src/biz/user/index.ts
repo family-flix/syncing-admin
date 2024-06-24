@@ -2,10 +2,10 @@
  * 当前登录用户相关逻辑
  */
 import { BaseDomain, Handler } from "@/domains/base";
-import { RequestCoreV2 } from "@/domains/request/v2";
+import { RequestCore } from "@/domains/request/index";
 import { HttpClientCore } from "@/domains/http_client/index";
 import { connect } from "@/domains/http_client/connect.axios";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 import { fetchUserSettings, fetchUserProfile, login, register, validate, updateUserSettings } from "./services";
 import { UserSettings } from "./types";
@@ -52,30 +52,12 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
   isLogin: boolean = false;
   needRegister = false;
 
-  $validateAPI: RequestCoreV2<{
-    fetch: typeof validate;
-    client: HttpClientCore;
-  }>;
-  $loginAPI: RequestCoreV2<{
-    fetch: typeof login;
-    client: HttpClientCore;
-  }>;
-  $registerAPI: RequestCoreV2<{
-    fetch: typeof register;
-    client: HttpClientCore;
-  }>;
-  $profileAPI: RequestCoreV2<{
-    fetch: typeof fetchUserProfile;
-    client: HttpClientCore;
-  }>;
-  $settingsAPI: RequestCoreV2<{
-    fetch: typeof fetchUserSettings;
-    client: HttpClientCore;
-  }>;
-  $settingsUpdateAPI: RequestCoreV2<{
-    fetch: typeof updateUserSettings;
-    client: HttpClientCore;
-  }>;
+  $validateAPI: RequestCore<typeof validate>;
+  $loginAPI: RequestCore<typeof login>;
+  $registerAPI: RequestCore<typeof register>;
+  $profileAPI: RequestCore<typeof fetchUserProfile>;
+  $settingsAPI: RequestCore<typeof fetchUserSettings>;
+  $settingsUpdateAPI: RequestCore<typeof updateUserSettings>;
 
   get state(): UserState {
     return {
@@ -87,7 +69,7 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
   }
   values: Partial<{ email: string; password: string }> = {};
 
-  constructor(props: Partial<{ _name: string }> & UserProps) {
+  constructor(props: Partial<{ _name: string }> & UserProps, client: HttpClientCore) {
     super(props);
 
     // if (!props) {
@@ -102,65 +84,22 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     this.isLogin = !!token;
     this.token = token;
 
-    const _client = new HttpClientCore({
-      headers: {
-        Authorization: token,
-      },
-    });
-    connect(_client);
-    // @ts-ignore
-    const client: HttpClientCore = {
-      async setHeaders<T>(...args: Parameters<typeof _client.setHeaders>) {
-        return _client.setHeaders(...args);
-      },
-      async appendHeaders<T>(...args: Parameters<typeof _client.appendHeaders>) {
-        return _client.appendHeaders(...args);
-      },
-      async get<T>(...args: Parameters<typeof _client.get>) {
-        const r = await _client.get<{ code: number; msg: string; data: T }>(...args);
-        if (r.error) {
-          return Result.Err(r.error.message);
-        }
-        const { code, msg, data } = r.data;
-        if (code !== 0) {
-          return Result.Err(msg, code, data);
-        }
-        return Result.Ok(data);
-      },
-      async post<T>(...args: Parameters<typeof _client.post>) {
-        const r = await _client.post<{ code: number; msg: string; data: T }>(...args);
-        if (r.error) {
-          return Result.Err(r.error.message);
-        }
-        const { code, msg, data } = r.data;
-        if (code !== 0) {
-          return Result.Err(msg, code, data);
-        }
-        return Result.Ok(data);
-      },
-    };
-    this.$validateAPI = new RequestCoreV2({
-      fetch: validate,
+    this.$validateAPI = new RequestCore(validate, {
       client,
     });
-    this.$loginAPI = new RequestCoreV2({
-      fetch: login,
+    this.$loginAPI = new RequestCore(login, {
       client,
     });
-    this.$registerAPI = new RequestCoreV2({
-      fetch: register,
+    this.$registerAPI = new RequestCore(register, {
       client,
     });
-    this.$profileAPI = new RequestCoreV2({
-      fetch: fetchUserProfile,
+    this.$profileAPI = new RequestCore(fetchUserProfile, {
       client,
     });
-    this.$settingsAPI = new RequestCoreV2({
-      fetch: fetchUserSettings,
+    this.$settingsAPI = new RequestCore(fetchUserSettings, {
       client,
     });
-    this.$settingsUpdateAPI = new RequestCoreV2({
-      fetch: updateUserSettings,
+    this.$settingsUpdateAPI = new RequestCore(updateUserSettings, {
       client,
     });
     this.onLogin(() => {

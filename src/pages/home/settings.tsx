@@ -5,19 +5,19 @@ import { ChevronRight, Loader } from "lucide-solid";
 import { ViewComponent, ViewComponentProps } from "@/store/types";
 import { Button, Input, ScrollView, Skeleton, Textarea } from "@/components/ui/index";
 import { Dialog, ListView } from "@/components/ui/index";
-import { List } from "@/components/List";
+import { List } from "@/components/List/index";
 import { ButtonCore, DialogCore, InputCore, ScrollViewCore } from "@/domains/ui/index";
-import { DriveFilesCore } from "@/domains/drive";
+import { fetchUserSettings } from "@/biz/user/services";
+import { DriveFilesCore } from "@/biz/drive";
 import { RefCore } from "@/domains/cur";
-import { RequestCoreV2 } from "@/domains/request/v2";
-import { BizError } from "@/domains/error";
+import { RequestCore } from "@/domains/request/index";
+import { BizError } from "@/domains/error/index";
 import { FileType } from "@/constants/index";
-import { fetchUserSettings } from "@/domains/user/services";
 
 function UserSettingsManagePageLogic(props: ViewComponentProps & { $ui: ReturnType<typeof UserSettingsManagePageUI> }) {
   const { app, client, $ui } = props;
 
-  const $profile = new RequestCoreV2({ fetch: fetchUserSettings, client });
+  const $profile = new RequestCore(fetchUserSettings, { client });
 
   return {
     async ready() {
