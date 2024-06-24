@@ -235,7 +235,7 @@ export const HomeLayout: ViewComponent = (props) => {
 
 function Menu(
   props: {
-    app: Application;
+    app: ViewComponentProps["app"];
     history: ViewComponentProps["history"];
     highlight?: boolean;
     url?: PageKeys;

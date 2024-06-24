@@ -9,17 +9,17 @@ import { refreshJobs } from "@/store/job";
 import { ViewComponent } from "@/store/types";
 import { Button, Skeleton, ScrollView, ListView, Checkbox } from "@/components/ui";
 import { TabHeader } from "@/components/ui/tab-header";
+import { JobItem, fetchJobList, pauseTask, TaskStatus, fetchJobListProcess } from "@/biz/task";
 import { ButtonCore, ButtonInListCore, CheckboxCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { ListCore } from "@/domains/list";
-import { JobItem, fetchJobList, pauseTask, TaskStatus } from "@/biz/task";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
 import { cn } from "@/utils/index";
 
 export const TaskListPage: ViewComponent = (props) => {
   const { app, history, view } = props;
 
-  const jobList = new ListCore(new RequestCore(fetchJobList), {});
+  const jobList = new ListCore(new RequestCore(fetchJobList, { process: fetchJobListProcess }), {});
   const pauseJob = new RequestCore(pauseTask, {
     onLoading(loading) {
       pauseJobBtn.setLoading(loading);

@@ -9,7 +9,15 @@ import { Button, ScrollView, Skeleton } from "@/components/ui";
 import { Article } from "@/components/Article";
 import { ScrollViewCore, ButtonCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
-import { JobProfile, fetchTaskProfile, fetch_output_lines_of_job, pauseTask, TaskStatus } from "@/biz/task";
+import {
+  JobProfile,
+  fetchTaskProfile,
+  fetchOutputLinesOfJob,
+  pauseTask,
+  TaskStatus,
+  fetchTaskProfileProcess,
+  fetchOutputLinesOfJobProcess,
+} from "@/biz/task";
 import { RequestCore } from "@/domains/request";
 
 export const TaskProfilePage: ViewComponent = (props) => {
@@ -36,12 +44,14 @@ export const TaskProfilePage: ViewComponent = (props) => {
     },
   });
   const logList = new ListCore(
-    new RequestCore(fetch_output_lines_of_job, {
+    new RequestCore(fetchOutputLinesOfJob, {
       delay: null,
+      process: fetchOutputLinesOfJobProcess,
     }),
     { pageSize: 100 }
   );
   const request = new RequestCore(fetchTaskProfile, {
+    process: fetchTaskProfileProcess,
     onLoading(loading) {
       refreshBtn.setLoading(loading);
     },

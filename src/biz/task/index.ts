@@ -3,8 +3,9 @@ import dayjs, { Dayjs } from "dayjs";
 import { BaseDomain, Handler } from "@/domains/base";
 import { Result } from "@/domains/result/index";
 
-import { fetchTaskProfile, fetchTaskStatus, pauseTask } from "./services";
+import { fetchTaskProfile, fetchTaskProfileProcess, fetchTaskStatus, pauseTask } from "./services";
 import { TaskStatus } from "./constants";
+import { RequestCore } from "@/domains/request";
 
 enum Events {
   StateChange,
@@ -33,7 +34,7 @@ export class TaskCore extends BaseDomain<TheTypesOfEvents> {
   /** 创建一个异步任务 */
   static async New(body: { id: string }) {
     const { id } = body;
-    const r = await fetchTaskProfile(id);
+    const r = await new RequestCore(fetchTaskProfile, { process: fetchTaskProfileProcess }).run(id);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -66,7 +67,7 @@ export class TaskCore extends BaseDomain<TheTypesOfEvents> {
   }
 
   async fetchStatus() {
-    const r = await fetchTaskStatus(this.id);
+    const r = await new RequestCore(fetchTaskStatus).run(this.id);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -84,7 +85,7 @@ export class TaskCore extends BaseDomain<TheTypesOfEvents> {
       //   this.forceFinish();
       //   return;
       // }
-      const r = await fetchTaskStatus(this.id);
+      const r = await new RequestCore(fetchTaskStatus).run(this.id);
       if (r.error) {
         this.loading = false;
         this.emit(Events.StateChange, { ...this.state });

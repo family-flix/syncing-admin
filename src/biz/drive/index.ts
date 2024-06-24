@@ -21,6 +21,7 @@ import {
   matchParsedMediasInDrive,
   receiveCheckInRewardOfDrive,
   analysisSpecialFilesInDrive,
+  refreshDriveProfileProcess,
 } from "./services";
 import { AliyunDriveFile } from "./types";
 
@@ -110,7 +111,7 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
     this.id = id;
     this.name = name;
     if (_name) {
-      this._name = _name;
+      this._unique_id = _name;
     }
     this.state = {
       ...options,
@@ -136,9 +137,9 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
     this.emit(Events.StateChange, { ...this.state });
     const r = await (() => {
       if (quickly) {
-        return analysisNewFilesInDrive({ drive_id: this.id });
+        return new RequestCore(analysisNewFilesInDrive).run({ drive_id: this.id });
       }
-      return analysisDrive({
+      return new RequestCore(analysisDrive).run({
         drive_id: this.id,
         target_folders: target_folders
           ? target_folders.map((folder) => {
@@ -177,7 +178,7 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
     }
     this.state.loading = true;
     this.emit(Events.StateChange, { ...this.state });
-    const r = await analysisSpecialFilesInDrive({
+    const r = await new RequestCore(analysisSpecialFilesInDrive).run({
       drive_id: this.id,
       files: target_folders.map((folder) => {
         const { file_id, name, type } = folder;
@@ -209,7 +210,7 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
     }
     this.state.loading = true;
     this.emit(Events.StateChange, { ...this.state });
-    const r = await matchParsedMediasInDrive({
+    const r = await new RequestCore(matchParsedMediasInDrive).run({
       drive_id: this.id,
     });
     if (r.error) {
@@ -229,7 +230,7 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 导出云盘信息（可直接导入其他网站） */
   async export() {
-    const r = await exportDriveInfo({ drive_id: this.id });
+    const r = await new RequestCore(exportDriveInfo).run({ drive_id: this.id });
     if (r.error) {
       const msg = this.tip({ text: ["导出失败", r.error.message] });
       return Result.Err(msg);
@@ -238,7 +239,7 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 更新云盘基本信息 */
   async update() {
-    const r = await updateAliyunDrive(this.id, this.values);
+    const r = await new RequestCore(updateAliyunDrive).run(this.id, this.values);
     this.values = {};
     if (r.error) {
       this.tip({ text: ["更新失败", r.error.message] });
@@ -248,7 +249,9 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok("更新云盘信息成功");
   }
   async _refresh() {
-    const r = await refreshDriveProfile({ drive_id: this.id });
+    const r = await new RequestCore(refreshDriveProfile, { process: refreshDriveProfileProcess }).run({
+      drive_id: this.id,
+    });
     if (r.error) {
       // this.tip({ text: ["刷新失败", r.error.message] });
       return Result.Err(r.error);
@@ -286,7 +289,7 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
     this.emit(Events.StateChange, { ...this.state });
   }
   async receiveRewards() {
-    const r = await receiveCheckInRewardOfDrive({ drive_id: this.id });
+    const r = await new RequestCore(receiveCheckInRewardOfDrive).run({ drive_id: this.id });
     if (r.error) {
       return Result.Err(r.error.message);
     }
@@ -301,7 +304,7 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 设置云盘索引根目录 */
   async setRootFolder(file: { file_id: string; name: string }) {
-    const r = await setDriveRootFolderId({
+    const r = await new RequestCore(setDriveRootFolderId).run({
       drive_id: this.id,
       root_folder_id: file.file_id,
       root_folder_name: file.name,
@@ -399,7 +402,7 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
       const msg = this.tip({ text: ["请先输入文件夹名称"] });
       return Result.Err(msg);
     }
-    const r = await addFolderInDrive({
+    const r = await new RequestCore(addFolderInDrive).run({
       drive_id: this.id,
       name: folder_name,
     });
@@ -411,7 +414,7 @@ export class DriveCore extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(r.data);
   }
   async checkIn() {
-    const r = await checkInDrive({ drive_id: this.id });
+    const r = await new RequestCore(checkInDrive).run({ drive_id: this.id });
     if (r.error) {
       const msg = this.tip({ text: ["签到失败", r.error.message] });
       return Result.Err(msg);

@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 
-import { client } from "@/store/request";
+import { media_request } from "@/biz/requests/index";
 import { FetchParams } from "@/domains/list/typing";
+import { TmpRequestResp } from "@/domains/request/utils";
 import { ListResponse, RequestedResource } from "@/types";
 import { Result } from "@/domains/result/index";
 
@@ -10,8 +11,8 @@ import { TaskStatus, TaskTypes } from "./constants";
 /**
  * 获取当前用户所有异步任务
  */
-export async function fetchJobList(params: FetchParams) {
-  const res = await client.post<
+export function fetchJobList(params: FetchParams) {
+  return media_request.post<
     ListResponse<{
       id: string;
       unique_id: string;
@@ -23,6 +24,9 @@ export async function fetchJobList(params: FetchParams) {
       created: string;
     }>
   >("/api/task/list", params);
+}
+export type JobItem = RequestedResource<typeof fetchJobListProcess>["list"][0];
+export function fetchJobListProcess(res: TmpRequestResp<typeof fetchJobList>) {
   if (res.error) {
     return Result.Err(res.error);
   }
@@ -53,13 +57,12 @@ export async function fetchJobList(params: FetchParams) {
   };
   return Result.Ok(result);
 }
-export type JobItem = RequestedResource<typeof fetchJobList>["list"][0];
 
 /**
  * 查询索引任务详情
  */
-export async function fetchTaskProfile(id: string) {
-  const r = await client.post<{
+export function fetchTaskProfile(id: string) {
+  return media_request.post<{
     id: string;
     desc: string;
     type: TaskTypes;
@@ -69,10 +72,12 @@ export async function fetchTaskProfile(id: string) {
     created: string;
     content: string;
   }>("/api/task/profile", { id: Number(id) });
+}
+export function fetchTaskProfileProcess(r: TmpRequestResp<typeof fetchTaskProfile>) {
   if (r.error) {
     return Result.Err(r.error);
   }
-  const { desc, status, type, lines, created } = r.data;
+  const { id, desc, status, type, lines, created } = r.data;
   const data = {
     id,
     desc,
@@ -106,12 +111,12 @@ export async function fetchTaskProfile(id: string) {
   };
   return Result.Ok(data);
 }
-export type JobProfile = RequestedResource<typeof fetchTaskProfile>;
+export type JobProfile = RequestedResource<typeof fetchTaskProfileProcess>;
 
 /** 获取指定异步任务的日志列表 */
-export async function fetch_output_lines_of_job(body: { job_id: string; page: number; pageSize: number }) {
+export function fetchOutputLinesOfJob(body: { job_id: string; page: number; pageSize: number }) {
   const { job_id, page, pageSize } = body;
-  const r = await client.post<
+  return media_request.post<
     ListResponse<{
       id: string;
       content: string;
@@ -121,6 +126,8 @@ export async function fetch_output_lines_of_job(body: { job_id: string; page: nu
     page,
     page_size: pageSize,
   });
+}
+export function fetchOutputLinesOfJobProcess(r: TmpRequestResp<typeof fetchOutputLinesOfJob>) {
   if (r.error) {
     return Result.Err(r.error);
   }
@@ -144,7 +151,7 @@ export async function fetch_output_lines_of_job(body: { job_id: string; page: nu
  * 查询索引任务状态
  */
 export function fetchTaskStatus(id: string) {
-  return client.post<{ id: string; desc: string; type: TaskTypes; status: TaskStatus; error?: string }>(
+  return media_request.post<{ id: string; desc: string; type: TaskTypes; status: TaskStatus; error?: string }>(
     "/api/task/status",
     { id: Number(id) }
   );
@@ -157,7 +164,7 @@ export function fetchTaskStatus(id: string) {
  * @returns
  */
 export function pauseTask(id: string) {
-  return client.post<{ id: string }>("/api/task/pause", {
+  return media_request.post<{ id: string }>("/api/task/pause", {
     id: Number(id),
     force: "1",
   });

@@ -70,7 +70,7 @@ export class InputCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
       onEnter,
     } = options;
     if (name) {
-      this._name = name;
+      this._unique_id = name;
     }
     this.placeholder = placeholder;
     this.type = type;
